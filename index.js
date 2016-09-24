@@ -1,5 +1,14 @@
 'use strict'
 
+/*
+ * do_ - Haskell's do
+ *  it should return a generator which yields the result of the do expression
+ *  this way one will be able to:
+ *    + turn do_ into an expression, like Haskell's that evaluates to the last
+ *      statement
+ *    + combine yield from an inner do, i.e. combine do's the way one can do
+ *      that in Haskell (see h' in m.hs)
+ */
 function do_(doG, cb) {
   const doBlock = doG(),
     { value: monad, done } = doBlock.next()
@@ -83,8 +92,27 @@ function* promiseComp() {
 }
 
 if (require.main === module) {
-  console.log('\nMaybeM\n')
+  console.log('\nMaybeComp\n')
   do_(maybeComp, m => console.log(`maybeComp: ${m.value}`))
-  console.log('\nPromiseM\n')
+  console.log('\nPromiseComp\n')
   do_(promiseComp, m => m.value.then((v) => console.log(`promiseComp: ${v}`)))
+  /*
+   * console.log('\nMixedComp\n')
+   * do_(function* () {
+   *   const x = yield new MaybeM(1)
+   *   // note: Haskell's typechecker would complain here!
+   *   const y = yield new PromiseM(new Promise((resolve, _) => setTimeout(resolve.bind(null, 2), 200)))
+   *   return new MaybeM(x + y);
+   * }, m => console.log(`mixed: ${m.value}`));
+   */
+
+  // this is how to do the same to make Haskell happy
+  /*
+   * do_(function* () {
+   *   const x = yield new MaybeM(1);
+   *   // TODO: how to port h' from m.hs ...
+   *   const y = yield new PromiseM(new Promise((resolve, _) => setTimeout(resolve.bind(null, 2), 200)))
+   *   return new MaybeM(x + y);
+   * }, m => console.log(`mixed': ${m.__proto__.constructor.name} ${m.value}`))
+   */
 }
