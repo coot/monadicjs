@@ -1,59 +1,90 @@
 'use strict'
 
-function do_(doBlock, cb, recieved=null, done) {
+function do_(doG, cb) {
+  const doBlock = doG(),
+    { value: monad, done } = doBlock.next()
   if (done)
-    return typeof cb === "function" ? cb(recieved) : null;
+    return cb(monad)
 
-  const { value: monad, done: done_ } = doBlock.next(recieved)
-  if (!done_) 
-    monad.join(doBlock, cb)
-  else if (typeof cb === "function")
-    cb(monad);
+  return (function inner(args) {
+    const {value: monad, done} = args
+    console.log(`${monad.__proto__.constructor.name}: ${monad.value} ${done}`)
+    return (!done) ? monad.join(doBlock, inner) : cb(monad)
+  })({value: monad, done})
 }
 
-class MaybeM {
-  /*
-   * param value
-   */
+class Monad {
   constructor(value) {
     this.value = value
+  }
+
+  /*
+   * join - equivalent to  >>= in Haskell written in contiuation style
+   *  it should call `cb(doBlock.next(...)` or cb(doBlock.return(...)` or
+   *  `cb(doBlock.throw(...)`.  If you omit the call to `cb` the `doBlock`
+   *  generator will not resume.
+   */
+  join(doBlock, cb) {
+    throw new Error('not implemented')
+  }
+
+  return(value) {
+    return new (Object.getPrototypeOf(this)).constructor(value)
+  }
+}
+
+class MaybeM extends Monad {
+  join(doBlock, cb) {
+    if (this.value !== null)
+      cb(doBlock.next(this.value))
+    else
+      cb(doBlock.return(this.return(null)))
+  }
+}
+
+class PromiseM extends Monad {
+  constructor(value) {
+
+    if (!(value instanceof Promise))
+      value = Promise.resolve(value)
+    super(value)
   }
 
   join(doBlock, cb) {
-    console.log(`MaybeM.join value=${this.value}`)
-    if (this.value !== null)
-      do_(doBlock, cb, this.value)
-    else {
-      const { value: monad } = doBlock.return(new MaybeM(null))
-      do_(doBlock, cb, monad, true)
-    }
+    const value = this.value
+      .then(val => cb(doBlock.next(val)))
+      .catch(val => cb(doBlock.throw(val)))
   }
 }
 
-class PromiseM {
-  /*
-   * param {Promise} value
-   */
-  constructor(value) {
-    this.value = value
-  }
+exports.do = do_
+exports.Monad = Monad
+exports.MaybeM = MaybeM
 
-  join(doBlock) {
-    this.value
-      .then(doBlock.next.bind(doBlock))
-      .catch(doBlock.throw.bind(doBlock))
-  }
+
+function* maybeComp() {
+  const x = yield new MaybeM(1)
+  const y = yield new MaybeM(2)
+  const z = yield new MaybeM(3)
+  return new MaybeM(x + y + z)
+}
+
+function* promiseComp() {
+  const x = yield new PromiseM(new Promise((resolve, reject) => {
+    setTimeout(resolve.bind(null, 1), 200)
+  }))
+  const y = yield new PromiseM(new Promise((resolve, reject) => {
+    setTimeout(resolve.bind(null, 2), 200)
+  }))
+  const z = yield new PromiseM(new Promise((resolve, reject) => {
+    setTimeout(resolve.bind(null, 3), 200)
+  }))
+  return new PromiseM(x + y + z)
 }
 
 if (require.main === module) {
-
-  function* addM() {
-    const x = yield new MaybeM(1)
-    console.log(`addM: x=${x}`)
-    const y = yield new MaybeM(2)
-    console.log(`addM: y=${y}`)
-    return new MaybeM(x + y)
-  }
-
-  const doVal = do_(addM(), m => console.log(`do value: ${m.value}`))
+  console.log('\nMaybeM\n')
+  do_(maybeComp, m => console.log(`maybeComp: ${m.value}`))
+  console.log('\nPromiseM\n')
+  do_(promiseComp, m => m.value.then((v) => console.log(`promiseComp: ${v}`)))
 }
