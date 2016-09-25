@@ -2,117 +2,94 @@
 
 /*
  * do_ - Haskell's do
- *  it should return a generator which yields the result of the do expression
- *  this way one will be able to:
- *    + turn do_ into an expression, like Haskell's that evaluates to the last
- *      statement
- *    + combine yield from an inner do, i.e. combine do's the way one can do
- *      that in Haskell (see h' in m.hs)
  */
-function do_(doG, cb) {
-  const doBlock = doG(),
-    { value: monad, done } = doBlock.next()
-  if (done)
-    return cb(monad)
+function do_(join, doG, cb, stack=[]) {
+  const doBlock = doG(stack)
+  if (stack.length === 0) {
+    stack.push({ join, doBlock })
+    const { value, done } = doBlock.next()
+    if (done)
+      return cb(value)
 
-  return (function inner(args) {
-    const {value: monad, done} = args
-    console.log(`${monad.__proto__.constructor.name}: ${monad.value} ${done}`)
-    return (!done) ? monad.join(doBlock, inner) : cb(monad)
-  })({value: monad, done})
-}
-
-class Monad {
-  constructor(value) {
-    this.value = value
-  }
-
-  /*
-   * join - equivalent to  >>= in Haskell written in contiuation style
-   *  it should call `cb(doBlock.next(...)` or cb(doBlock.return(...)` or
-   *  `cb(doBlock.throw(...)`.  If you omit the call to `cb` the `doBlock`
-   *  generator will not resume.
-   */
-  join(doBlock, cb) {
-    throw new Error('not implemented')
-  }
-
-  return(value) {
-    return new (Object.getPrototypeOf(this)).constructor(value)
+    return (function inner(stack, args) {
+      const {value, done} = args,
+        { join }= stack[stack.length - 1]
+      // console.log(`${join.name}: ${value} ${done}`)
+      return (!done) ? join(stack, value, inner.bind(null, stack)) : cb(value)
+    })(stack, {value, done})
+  } else {
+    return (function* innerG(stack) {
+      stack.push({ join , doBlock })
+      let result = yield* doBlock
+      stack.pop()
+      return result
+    })(stack)
   }
 }
 
-class MaybeM extends Monad {
-  join(doBlock, cb) {
-    if (this.value !== null)
-      cb(doBlock.next(this.value))
-    else
-      cb(doBlock.return(this.return(null)))
+function maybeJoin(stack, value, cb) {
+  const { doBlock } = stack[stack.length - 1]
+  if (value !== null) {
+    cb(doBlock.next(value))
+  } else {
+    cb(doBlock.return(null))
+    let idx = stack.length - 1
+    // stop all generators down to the bottom
+    // this is how Maybe works in Haskell
+    while (--idx >= 0) {
+      stack[idx].doBlock.return(null)
+    }
   }
 }
 
-class PromiseM extends Monad {
-  constructor(value) {
-
-    if (!(value instanceof Promise))
-      value = Promise.resolve(value)
-    super(value)
-  }
-
-  join(doBlock, cb) {
-    const value = this.value
-      .then(val => cb(doBlock.next(val)))
-      .catch(val => cb(doBlock.throw(val)))
-  }
+function promiseJoin(stack, promise, cb) {
+  const { doBlock } = stack[stack.length - 1]
+  promise
+    .then(val => {
+      cb(doBlock.next(val))
+    })
+    .catch(err => {
+      cb(doBlock.throw(err))
+    })
 }
 
 exports.do = do_
-exports.Monad = Monad
-exports.MaybeM = MaybeM
 
 
 function* maybeComp() {
-  const x = yield new MaybeM(1)
-  const y = yield new MaybeM(2)
-  const z = yield new MaybeM(3)
-  return new MaybeM(x + y + z)
+  const x = yield 1
+  const y = yield 2
+  const z = yield null
+  return x + y + z
 }
 
 function* promiseComp() {
-  const x = yield new PromiseM(new Promise((resolve, reject) => {
+  const x = yield new Promise((resolve, reject) => {
     setTimeout(resolve.bind(null, 1), 200)
-  }))
-  const y = yield new PromiseM(new Promise((resolve, reject) => {
+  })
+  const y = yield new Promise((resolve, reject) => {
     setTimeout(resolve.bind(null, 2), 200)
-  }))
-  const z = yield new PromiseM(new Promise((resolve, reject) => {
+  })
+  const z = yield new Promise((resolve, reject) => {
     setTimeout(resolve.bind(null, 3), 200)
-  }))
-  return new PromiseM(x + y + z)
+  })
+  return Promise.resolve(x + y + z)
 }
 
 if (require.main === module) {
-  console.log('\nMaybeComp\n')
-  do_(maybeComp, m => console.log(`maybeComp: ${m.value}`))
-  console.log('\nPromiseComp\n')
-  do_(promiseComp, m => m.value.then((v) => console.log(`promiseComp: ${v}`)))
-  /*
-   * console.log('\nMixedComp\n')
-   * do_(function* () {
-   *   const x = yield new MaybeM(1)
-   *   // note: Haskell's typechecker would complain here!
-   *   const y = yield new PromiseM(new Promise((resolve, _) => setTimeout(resolve.bind(null, 2), 200)))
-   *   return new MaybeM(x + y);
-   * }, m => console.log(`mixed: ${m.value}`));
-   */
-
-  // this is how to do the same to make Haskell happy
-  /*
-   * do_(function* () {
-   *   const x = yield new MaybeM(1);
-   *   // TODO: how to port h' from m.hs ...
-   *   const y = yield new PromiseM(new Promise((resolve, _) => setTimeout(resolve.bind(null, 2), 200)))
-   *   return new MaybeM(x + y);
-   * }, m => console.log(`mixed': ${m.__proto__.constructor.name} ${m.value}`))
-   */
+  do_(maybeJoin, maybeComp, v => console.log(`maybeComp: ${v}`))
+  do_(promiseJoin, promiseComp, promise => promise.then((v) => console.log(`promiseComp: ${v}`)))
+  do_(maybeJoin, function* (stack) {
+    const x = yield 1
+    const y = yield 2
+    const promise = yield* do_(promiseJoin, promiseComp, null, stack)
+    const w = yield 3
+    return promise.then(z => x + y + z + w)
+  }, p => p ? p.then(v => console.log(`mixed: ${v}`)) : console.log(`mixed: ${p}`));
+  do_(promiseJoin, function* (stack) {
+    const x = yield new Promise((resolve, _) => setTimeout(resolve.bind(null, 1), 200))
+    const y = yield new Promise((resolve, _) => setTimeout(resolve.bind(null, 2), 200))
+    const z = yield* do_(maybeJoin, maybeComp, null, stack)
+    return x + y + z
+  }, v => console.log(`mixed': ${v}`))
 }
