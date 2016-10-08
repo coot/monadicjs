@@ -56,8 +56,6 @@ function do_(monad, doG, cb, stack=[]) {
 }
 
 class MaybeM {
-  static return(value) {return value}
-  static fail(error) {return null}
   static join(stack, value, cb) {
     // console.log(`MaybeM.join(${stack.length}, ${JSON.stringify(value)})`)
     if (value !== null) {

@@ -1,0 +1,27 @@
+{
+  "name": "monadicjs",
+  "version": "0.0.5",
+  "description": "javascript monad library with do-notation",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^3.1.0"
+  },
+  "scripts": {
+    "test": "mocha tests/tests.js"
+  },
+  "keywords": [
+    "monad",
+    "monads",
+    "do-notation",
+    "generator",
+    "promise",
+    "computation",
+    "declarative"
+  ],
+  "author": "Marcin Szamotulski",
+  "license": "MIT"
+}
