@@ -1,7 +1,7 @@
 "use strict"
 
 const assert = require("assert")
-const { "do": do_, Just, Nothing } = require("../index.js")
+const { "do": do_, Just, Nothing } = require("../index")
 
 function* maybeComp(g, stack) {
   const results = []
