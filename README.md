@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/coot/monadicjs.svg)](https://travis-ci.org/coot/monadicjs)
+
 # Declarative Monad library for JavaScript
 
 Monads can be very useful for async IO.  They succefully appeared in Haskell.
