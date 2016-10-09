@@ -11,7 +11,7 @@
     "mocha": "^3.1.0"
   },
   "scripts": {
-    "test": "mocha tests/tests.js"
+    "test": "mocha tests"
   },
   "keywords": [
     "monad",
