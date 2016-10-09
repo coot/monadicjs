@@ -15,11 +15,11 @@ ports `do` to JavaScript.  Something that looks like this in Haskell
 
 will look like this in JavaScript:
 ```
+  const fs = require("fs")
   do_(function*() {
     const fileContent = yield fs.readFile.bind(null, "README.md")
     console.log(fileContent)
   })
 ```
 
-This is the aim.  The work is in progress!  But an initial working version is
-there.  Checkout tests how to experiment with it.
+Checkout tests how to experiment with it.
