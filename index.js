@@ -51,7 +51,11 @@ function do_(doG, cb, stack=[]) {
 }
 
 
-exports.do = do_
-exports.Maybe = Maybe
-exports.Nothing = Nothing
-exports.Just = Just
+module.exports = {
+  do: do_,
+  Maybe,
+  Nothing,
+  Just,
+  PromiseMonad,
+  Monad,
+}
