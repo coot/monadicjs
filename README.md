@@ -16,7 +16,7 @@ ports `do` to JavaScript.  Something that looks like this in Haskell
 will look like this in JavaScript:
 ```
   do_(function*() {
-    const fileContent = yield fs.readFile("README.md")
+    const fileContent = yield fs.readFile.bind(null, "README.md")
     console.log(fileContent)
   })
 ```

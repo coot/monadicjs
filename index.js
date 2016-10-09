@@ -4,6 +4,7 @@
 const ctrl = require("./lib/ctrl")
 const Monad = require("./lib/monad")
 const { Maybe, Just, Nothing } = require("./lib/maybe")
+const NodeContinuation = require("./lib/node-continuation")
 const PromiseMonad = require("./lib/promise")
 const { unwrap, wrap } = require("./lib/utils")
 
@@ -33,10 +34,16 @@ function do_(doG, cb, stack=[]) {
           return received.join(stack, inner.bind(null, stack))
         else if (received instanceof Promise)
           return PromiseMonad.join(stack, received, inner.bind(null, stack))
+        else if (received instanceof Function)
+          return NodeContinuation.join(stack, received, inner.bind(null, stack))
       // here I should deal with return values (which should by of type Monad)
       } else if (stack.length <= 1) {
         // console.log(`value: ${JSON.stringify(value)}, ${stack.length}`)
-        return cb(unwrap(value, stack.length - 1))
+        const returnValue = unwrap(value, stack.length - 1)
+        if (returnValue instanceof NodeContinuation) {
+          cb.apply(null, returnValue)
+        } else
+          cb(returnValue)
       }
     })(stack, {value, done})
   } else {
@@ -56,6 +63,7 @@ module.exports = {
   Maybe,
   Nothing,
   Just,
+  NodeContinuation,
   PromiseMonad,
   Monad,
 }
