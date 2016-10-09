@@ -2,7 +2,9 @@
 "use strict"
 
 const ctrl = require("./lib/ctrl")
+const Monad = require("./lib/monad")
 const { Maybe, Just, Nothing } = require("./lib/maybe")
+const PromiseMonad = require("./lib/promise")
 const { unwrap, wrap } = require("./lib/utils")
 
 
@@ -27,7 +29,10 @@ function do_(doG, cb, stack=[]) {
       if (!done) {
         const received = unwrap(value, stack.length)
         // console.log("received", received.toString())
-        return received.join(stack, inner.bind(null, stack))
+        if (received instanceof Monad)
+          return received.join(stack, inner.bind(null, stack))
+        else if (received instanceof Promise)
+          return PromiseMonad.join(stack, received, inner.bind(null, stack))
       // here I should deal with return values (which should by of type Monad)
       } else if (stack.length <= 1) {
         // console.log(`value: ${JSON.stringify(value)}, ${stack.length}`)
