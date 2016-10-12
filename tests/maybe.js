@@ -93,3 +93,8 @@ describe("Maybe", function() {
       })
   })
 })
+
+module.exports = {
+  maybeComp,
+  maybeCompFail,
+}
