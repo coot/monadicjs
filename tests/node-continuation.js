@@ -25,7 +25,6 @@ function* readFilesFail(stack) {
   return NodeContinuation.return(results)
 }
 
-
 function* returnFail(stack) {
   const results = []
   results.push(yield fs.readFile.bind(null, module.filename))
@@ -34,7 +33,8 @@ function* returnFail(stack) {
 
 describe("NodeContinuation", function() {
   it("should return the result", done => {
-    do_(readFiles, (err, results) => {
+    do_(readFiles, nc => {
+      const [err, results] = nc
       assert.strictEqual(err, null)
       assert.strictEqual(results[0] instanceof Buffer, true)
       assert.strictEqual(results[1] instanceof Buffer, true)
@@ -43,7 +43,8 @@ describe("NodeContinuation", function() {
   })
 
   it("should return error on failure", done => {
-    do_(readFilesFail, (err, results) => {
+    do_(readFilesFail, nc => {
+      const [err, results] = nc
       assert.strictEqual(err instanceof Error, true)
       assert.strictEqual(results, null)
       done()
@@ -51,7 +52,8 @@ describe("NodeContinuation", function() {
   })
 
   it("should return failure", done => {
-    do_(returnFail, (err, results) => {
+    do_(returnFail, nc => {
+      const [err, results] = nc
       assert.strictEqual(err instanceof Error, true)
       assert.strictEqual(err.message, "error")
       assert.strictEqual(results, null)

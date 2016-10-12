@@ -40,9 +40,6 @@ function do_(doG, cb, stack=[]) {
       } else if (stack.length <= 1) {
         // console.log(`value: ${JSON.stringify(value)}, ${stack.length}`)
         const returnValue = unwrap(value, stack.length - 1)
-        if (returnValue instanceof NodeContinuation) {
-          cb.apply(null, returnValue)
-        } else
           cb(returnValue)
       }
     })(stack, {value, done})
