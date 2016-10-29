@@ -4,6 +4,7 @@
 const ctrl = require("./lib/ctrl")
 const Monad = require("./lib/monad")
 const { Maybe, Just, Nothing } = require("./lib/maybe")
+const { Either, Left, Right } = require("./lib/either")
 const NodeContinuation = require("./lib/node-continuation")
 const PromiseMonad = require("./lib/promise")
 const { unwrap, wrap } = require("./lib/utils")
@@ -57,10 +58,9 @@ function do_(doG, cb, stack=[]) {
 
 module.exports = {
   do: do_,
-  Maybe,
-  Nothing,
-  Just,
+  Maybe, Nothing, Just,
   NodeContinuation,
   PromiseMonad,
   Monad,
+  Either, Left, Right
 }
