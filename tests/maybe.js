@@ -1,7 +1,7 @@
 "use strict"
 
 const assert = require("assert")
-const { "do": do_, Just, Nothing } = require("../index")
+const { "do": do_, Just, Nothing, Maybe, Monad } = require("../index")
 
 function* maybeComp(g, stack) {
   const results = []
@@ -27,6 +27,30 @@ function* maybeCompFail() {
 }
 
 describe("Maybe", function() {
+  describe("Just", () => {
+    it("should construct instance of Just", () => {
+      assert.equal(Just(null) instanceof Just, true)
+    })
+
+    it("should construct instance of Maybe", () => {
+      assert.equal(Just(null) instanceof Maybe, true)
+    })
+
+    it("should construct instance of Monad", () => {
+      assert.equal(Just(null) instanceof Monad, true)
+    })
+  })
+
+  describe("Nothing", () => {
+    it("should be an instance of Maybe", () => {
+      assert.equal(Nothing instanceof Maybe, true)
+    })
+
+    it("should be an instance of Monad", () => {
+      assert.equal(Nothing instanceof Monad, true)
+    })
+  })
+
   it("should return the result", done => {
     do_(maybeComp.bind(null, null), results => {
       assert.deepStrictEqual(results, [1, 2, 3])
@@ -36,7 +60,7 @@ describe("Maybe", function() {
 
   it("should return Nothing on failure", done => {
     do_(maybeCompFail, result => {
-      assert.equal(result.isNothing(), true)
+      assert.equal(result === Nothing, true)
       done()
     })
   })
@@ -56,7 +80,7 @@ describe("Maybe", function() {
       maybeComp.bind(null, maybeCompFail),
       results => {
         assert.deepStrictEqual(results.slice(0, 3), [1,2,3])
-        assert.strictEqual(results[3].isNothing(), true)
+        assert.strictEqual(results[3] === Nothing, true)
         done()
       }
     )
@@ -88,7 +112,7 @@ describe("Maybe", function() {
       ),
       results => {
         assert.deepStrictEqual(results.slice(0,3), [1,2,3])
-        assert.strictEqual(results[3].isNothing(), true)
+        assert.strictEqual(results[3] === Nothing, true)
         done()
       })
   })
