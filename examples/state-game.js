@@ -16,6 +16,8 @@ const { do: do_, get, put } = require("../index.js")
  *        _        -> put (on, score)
  *      playGame xs
  *    ```
+ *    Note that the javascript code resambles the haskell implentation: both
+ *    implementations are recursive.
  */
 function stateGame(actions) {
   return function*(stack) {
