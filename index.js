@@ -8,6 +8,7 @@ const { Either, Left, Right } = require("./lib/either")
 const NodeContinuation = require("./lib/node-continuation")
 const PromiseMonad = require("./lib/promise")
 const { unwrap, wrap } = require("./lib/utils")
+const { State, get, put, modify } = require("./lib/state")
 
 
 let id = 0
@@ -15,12 +16,12 @@ let id = 0
 /**
  * @function do_ Haskell's do
  */
-function do_(doG, cb, stack=[]) {
+function do_(doG, cb, stack=[], data={}) {
   const doBlock = ctrl(doG(stack), stack, id)
   if (!doBlock._id) doBlock._id = id++
 
   if (stack.length === 0) {
-    stack.push({ doBlock })
+    stack.push(Object.assign({}, { data }, { doBlock }))
     const { value, done } = doBlock.next()
     if (done)
       return cb(value)
@@ -62,5 +63,6 @@ module.exports = {
   NodeContinuation,
   PromiseMonad,
   Monad,
-  Either, Left, Right
+  Either, Left, Right,
+  State, get, put, modify,
 }
