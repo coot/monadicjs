@@ -2,9 +2,20 @@
 
 const assert = require("assert")
 const { "do": do_, State, get, put, modify, Monad } = require("../index")
-
+const stateGame = require("../examples/state-game")
 
 describe("State", function() {
+  describe("game", function() {
+    it("should play ;)", function(done) {
+      do_(stateGame("caacbcb"), (state) => {
+        const [on, result] = state
+        assert.equal(on, true)
+        assert.equal(result, 1)
+        done()
+      }, [], {state: [false, 0]})
+    })
+  })
+
   describe("get", function() {
     it("should yield the default state", function() {
       do_(
