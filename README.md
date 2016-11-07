@@ -40,10 +40,10 @@ can do in Haskell but not with this library:
 * [Either](https://github.com/coot/monadicjs/blob/master/lib/either.js)
 * [Promise](https://github.com/coot/monadicjs/blob/master/lib/promise.js)
 * [NodeContinuation](https://github.com/coot/monadicjs/blob/master/lib/node-continuation.js) or node callbacks
+* [State Monad](https://wiki.haskell.org/State_Monad))
 
 # Ideas
 
-* the State monad ([Haskell State monad](https://wiki.haskell.org/State_Monad))
 * use a (kind of) state monad for [react-redux](https://github.com/reactjs/react-redux) store
 * monad transformers
 * [react-redux](https://github.com/reactjs/react-redux) store middleware
