@@ -56,9 +56,16 @@ function do_(doG, cb, stack=[], data={}) {
   }
 }
 
+function doPromise(gen, data={}) {
+  return Promise((resolve, reject) => {
+    do_(gen, resolve, [], data)
+  })
+}
+
 
 module.exports = {
   do: do_,
+  doPromise,
   Maybe, Nothing, Just,
   NodeContinuation,
   PromiseMonad,
