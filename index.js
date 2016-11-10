@@ -31,7 +31,6 @@ function do_(doG, cb, stack=[], data={}) {
         { doBlock }= stack[stack.length - 1]
       if (!done) {
         const received = unwrap(value, stack.length)
-        // console.log("received", received.toString())
         if (received instanceof Monad)
           return received.join(stack, inner.bind(null, stack))
         else if (received instanceof Promise)
@@ -40,7 +39,6 @@ function do_(doG, cb, stack=[], data={}) {
           return NodeContinuation.join(stack, received, inner.bind(null, stack))
       // here I should deal with return values (which should by of type Monad)
       } else if (stack.length <= 1) {
-        // console.log(`value: ${JSON.stringify(value)}, ${stack.length}`)
         const returnValue = unwrap(value, stack.length - 1)
           cb(returnValue)
       }
@@ -50,7 +48,6 @@ function do_(doG, cb, stack=[], data={}) {
       stack.push({ doBlock })
       let result = yield* doBlock
       stack.pop()
-      // console.log(`wrapper ${JSON.stringify(result)}`)
       return result
     })(stack)
   }
