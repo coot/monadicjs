@@ -1,7 +1,7 @@
 "use strict"
 
 const assert = require("assert")
-const { "do": do_, doPromise, Right, Left, Either, Monad } = require("../index")
+const { "do": do_, doP, Right, Left, Either, Monad } = require("../index")
 
 function* eitherComp(g, stack) {
   const results = []
@@ -55,7 +55,7 @@ describe("Either", function() {
     })
   })
   it("should return the result", done => {
-    doPromise(eitherComp.bind(null, null))
+    doP(eitherComp.bind(null, null))
       .then( results => {
         assert.deepStrictEqual(results, [1, 2, 3])
         done()
@@ -63,7 +63,7 @@ describe("Either", function() {
   })
 
   it("should return Left on error", done => {
-    doPromise(eitherCompFail)
+    doP(eitherCompFail)
       .then(result => {
         assert.equal(result instanceof Left, true)
         assert.equal(result.fromLeft(), 2)
@@ -72,7 +72,7 @@ describe("Either", function() {
   })
 
   it("should yield* from a successful computation", done => {
-    doPromise(
+    doP(
       eitherComp.bind(null, eitherComp.bind(null, null))
     )
       .then(results => {
@@ -82,7 +82,7 @@ describe("Either", function() {
   })
 
   it("should yield* from a failing computation", done => {
-    doPromise(
+    doP(
       eitherComp.bind(null, eitherCompFail)
     )
       .then(results => {
