@@ -1,7 +1,7 @@
 "use strict"
 
 const assert = require("assert")
-const { "do": do_, Right, Left, Either, Monad } = require("../index")
+const { "do": do_, doPromise, Right, Left, Either, Monad } = require("../index")
 
 function* eitherComp(g, stack) {
   const results = []
@@ -55,39 +55,41 @@ describe("Either", function() {
     })
   })
   it("should return the result", done => {
-    do_(eitherComp.bind(null, null), results => {
-      assert.deepStrictEqual(results, [1, 2, 3])
-      done()
-    })
+    doPromise(eitherComp.bind(null, null))
+      .then( results => {
+        assert.deepStrictEqual(results, [1, 2, 3])
+        done()
+      })
   })
 
   it("should return Left on error", done => {
-    do_(eitherCompFail, result => {
-      assert.equal(result instanceof Left, true)
-      assert.equal(result.fromLeft(), 2)
-      done()
-    })
+    doPromise(eitherCompFail)
+      .then(result => {
+        assert.equal(result instanceof Left, true)
+        assert.equal(result.fromLeft(), 2)
+        done()
+      })
   })
 
   it("should yield* from a successful computation", done => {
-    do_(
-      eitherComp.bind(null, eitherComp.bind(null, null)),
-      results => {
+    doPromise(
+      eitherComp.bind(null, eitherComp.bind(null, null))
+    )
+      .then(results => {
         assert.deepStrictEqual(results, [1,2,3,1,2,3])
         done()
-      }
-    )
+      })
   })
 
   it("should yield* from a failing computation", done => {
-    do_(
-      eitherComp.bind(null, eitherCompFail),
-      results => {
+    doPromise(
+      eitherComp.bind(null, eitherCompFail)
+    )
+      .then(results => {
         assert.deepStrictEqual(results.slice(0, 3), [1,2,3])
         assert.strictEqual(results[3] instanceof Left, true)
         assert.strictEqual(results[3].fromLeft(), 2)
         done()
-      }
-    )
+      })
   })
 })

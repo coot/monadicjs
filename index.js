@@ -54,7 +54,7 @@ function do_(doG, cb, stack=[], data={}) {
 }
 
 function doPromise(gen, data={}) {
-  return Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     do_(gen, resolve, [], data)
   })
 }
