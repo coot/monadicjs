@@ -4,7 +4,7 @@ const fs = require("fs")
 const path = require("path")
 
 const { "do": do_, Just, Nothing } = require("../index")
-const NodeContinuation = require("../lib/node-continuation")
+const NodeContinuationMonad = require("../lib/node-continuation")
 
 
 function* readFiles(stack) {
@@ -13,7 +13,7 @@ function* readFiles(stack) {
   results.push(yield fs.readFile.bind(null,
     path.join(path.dirname(module.filename), "./maybe.js")
   ))
-  return NodeContinuation.return(results)
+  return NodeContinuationMonad.return(results)
 }
 
 function* readFilesFail(stack) {
@@ -22,16 +22,16 @@ function* readFilesFail(stack) {
   results.push(yield fs.readFile.bind(null,
     path.join(path.dirname(module.filename), "___no_such_file__")
   ))
-  return NodeContinuation.return(results)
+  return NodeContinuationMonad.return(results)
 }
 
 function* returnFail(stack) {
   const results = []
   results.push(yield fs.readFile.bind(null, module.filename))
-  return NodeContinuation.fail(new Error("error"))
+  return NodeContinuationMonad.fail(new Error("error"))
 }
 
-describe("NodeContinuation", function() {
+describe("NodeContinuationMonad", function() {
   it("should return the result", done => {
     do_(readFiles, nc => {
       const [err, results] = nc
@@ -72,7 +72,7 @@ describe("NodeContinuation", function() {
     do_(
       maybeComp.bind(null, readFiles),
       results => {
-        assert.strictEqual(results[1] instanceof NodeContinuation, true)
+        assert.strictEqual(results[1] instanceof NodeContinuationMonad, true)
         const [err, files] = results[1]
         assert.strictEqual(err, null)
         assert.strictEqual(files.every(f => f instanceof Buffer), true)
@@ -85,7 +85,7 @@ describe("NodeContinuation", function() {
     do_(
       maybeComp.bind(null, readFilesFail),
       results => {
-        assert.strictEqual(results[1] instanceof NodeContinuation, true)
+        assert.strictEqual(results[1] instanceof NodeContinuationMonad, true)
         const [err, files] = results[1]
         assert.strictEqual(err instanceof Error, true)
         assert.strictEqual(files, null)
